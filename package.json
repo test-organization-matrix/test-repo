@@ -1,0 +1,26 @@
+{
+  "name": "ai-todo-app",
+  "version": "1.0.0",
+  "description": "AI-powered todo app: type tasks in natural language and let the AI parse, prioritise and organise them.",
+  "type": "commonjs",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "keywords": [
+    "todo",
+    "ai",
+    "natural-language",
+    "express",
+    "sqlite"
+  ],
+  "license": "MIT"
+}
