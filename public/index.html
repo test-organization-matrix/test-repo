@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Todo</title>
+  <link rel="stylesheet" href="./style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✅</text></svg>" />
+</head>
+<body>
+  <main class="app">
+    <header class="app__header">
+      <h1>AI Todo <span class="badge" id="engineBadge">loading…</span></h1>
+      <p class="subtitle">Type a task the way you'd say it — the AI fills in the date, priority and tags.</p>
+    </header>
+
+    <section class="card ai-card">
+      <label for="aiInput" class="sr-only">Describe a task</label>
+      <div class="ai-row">
+        <input id="aiInput" type="text" autocomplete="off" maxlength="1000"
+               placeholder="e.g. Email the client about the invoice tomorrow #work urgent" />
+        <button id="aiAddBtn" class="btn btn--primary">Add with AI</button>
+      </div>
+      <div class="chips" id="examples">
+        <button class="chip" data-example="Call the plumber tomorrow morning urgent">call plumber tomorrow</button>
+        <button class="chip" data-example="Plan the team offsite next week #work">offsite next week</button>
+        <button class="chip" data-example="Read that book someday low priority #personal">someday, low priority</button>
+      </div>
+      <p class="hint" id="aiHint">Press Enter to add. A preview appears before saving.</p>
+    </section>
+
+    <section class="card draft-card" id="draftCard" hidden>
+      <h2 class="draft-title">Review before saving</h2>
+      <div class="draft-grid">
+        <label>Title <input id="draftTitle" type="text" maxlength="200" /></label>
+        <label>Priority
+          <select id="draftPriority">
+            <option value="low">low</option>
+            <option value="medium">medium</option>
+            <option value="high">high</option>
+          </select>
+        </label>
+        <label>Due date <input id="draftDue" type="date" /></label>
+        <label>Tags <input id="draftTags" type="text" placeholder="comma, separated" /></label>
+      </div>
+      <div class="draft-actions">
+        <button id="draftSave" class="btn btn--primary">Save task</button>
+        <button id="draftCancel" class="btn">Cancel</button>
+      </div>
+    </section>
+
+    <section class="card summary-card" id="summaryCard" hidden>
+      <span class="summary-icon">✨</span>
+      <p id="summaryText"></p>
+    </section>
+
+    <section class="toolbar">
+      <div class="filters" role="group" aria-label="Filters">
+        <button class="filter is-active" data-filter="all">All</button>
+        <button class="filter" data-filter="open">Open</button>
+        <button class="filter" data-filter="done">Done</button>
+        <button class="filter" data-filter="high">High priority</button>
+      </div>
+      <div class="toolbar__right">
+        <select id="sortSelect" aria-label="Sort">
+          <option value="created">Newest</option>
+          <option value="priority">Priority</option>
+          <option value="due">Due date</option>
+        </select>
+        <button id="clearBtn" class="btn btn--ghost">Clear completed</button>
+      </div>
+    </section>
+
+    <ul class="todo-list" id="todoList"></ul>
+    <p class="empty" id="emptyState" hidden>Nothing here yet — add your first task above.</p>
+
+    <footer class="app__footer">
+      <span id="statsLine"></span>
+    </footer>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <script src="./app.js"></script>
+</body>
+</html>
