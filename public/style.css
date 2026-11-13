@@ -157,6 +157,60 @@ html, body {
 }
 .draft-actions { display: flex; gap: 10px; margin-top: 16px; }
 
+.btn--sm { padding: 6px 10px; font-size: 1rem; line-height: 1; }
+
+.today-card {
+  background: linear-gradient(160deg, #1f2540, var(--card));
+  border-color: rgba(124, 108, 255, 0.35);
+}
+.today-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.today-title { margin: 0; font-size: 1.05rem; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.today-date { font-size: 0.78rem; font-weight: 500; color: var(--muted); }
+.today-recap {
+  margin: 12px 0 16px;
+  line-height: 1.5;
+  color: #d8defb;
+  font-size: 0.95rem;
+  min-height: 1.4em;
+}
+.today-recap.is-loading { color: var(--muted); font-style: italic; }
+
+.today-counts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.stat {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 8px;
+  text-align: center;
+}
+.stat__num { display: block; font-size: 1.5rem; font-weight: 700; line-height: 1.1; }
+.stat__label { display: block; font-size: 0.7rem; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.03em; }
+.stat--warn .stat__num { color: var(--red); }
+.stat--warn.has-value { border-color: rgba(255, 107, 129, 0.4); background: rgba(255, 107, 129, 0.08); }
+.stat--good .stat__num { color: var(--green); }
+
+.today-lists { display: flex; flex-direction: column; gap: 10px; }
+.today-group__label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+.today-group__items { display: flex; flex-direction: column; gap: 4px; }
+.today-item {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.9rem; padding: 5px 0;
+  border-bottom: 1px solid rgba(44, 51, 82, 0.5);
+}
+.today-item:last-child { border-bottom: none; }
+.today-item__dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.today-item__dot--high { background: var(--red); }
+.today-item__dot--medium { background: var(--amber); }
+.today-item__dot--low { background: var(--green); }
+.today-item__title { flex: 1; word-break: break-word; }
+.today-item__due { font-size: 0.75rem; color: var(--muted); }
+.today-empty { color: var(--muted); font-size: 0.85rem; }
+
 .summary-card { display: flex; gap: 12px; align-items: flex-start; border-color: rgba(53, 211, 154, 0.3); }
 .summary-icon { font-size: 1.2rem; line-height: 1.4; }
 .summary-card p { margin: 0; line-height: 1.5; color: #cfe9dd; }

@@ -248,11 +248,96 @@ async function summarize(todos, options = {}) {
   }
 }
 
+/**
+ * Short natural-language recap of a day, built from a TodoStore.todayOverview().
+ * Returns { summary, engine }. Uses the LLM when a key is configured, otherwise
+ * (or on any error) produces a clear templated sentence.
+ */
+async function summarizeToday(overview, options = {}) {
+  const { ai = {}, fetchImpl } = options;
+  const c = overview.counts;
+  const fallback = buildTodayFallback(overview);
+
+  if (!ai.apiKey) return { summary: fallback, engine: 'rules' };
+
+  const fmt = (list) => list.slice(0, 12)
+    .map((t) => `- ${t.title} (${t.priority})`)
+    .join('\n') || '- (none)';
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+  try {
+    const res = await fetchImpl(`${ai.baseUrl.replace(/\/$/, '')}/chat/completions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ai.apiKey}` },
+      body: JSON.stringify({
+        model: ai.model,
+        temperature: 0.3,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a concise productivity assistant. Given a day\'s task stats, write a 1-2 sentence recap and a nudge on what to do next. No markdown, no lists.',
+          },
+          {
+            role: 'user',
+            content: `Date: ${overview.date}
+Due today (${c.dueToday}):
+${fmt(overview.dueToday)}
+Overdue (${c.overdue}):
+${fmt(overview.overdue)}
+Completed today: ${c.completedToday}
+Open overall: ${c.openTotal}`,
+          },
+        ],
+      }),
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`LLM HTTP ${res.status}`);
+    const data = await res.json();
+    const out = data?.choices?.[0]?.message?.content?.trim();
+    if (!out) throw new Error('empty');
+    return { summary: out, engine: 'llm' };
+  } catch {
+    return { summary: fallback, engine: 'rules' };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Deterministic, friendly recap used without an LLM. */
+function buildTodayFallback(overview) {
+  const c = overview.counts;
+  const parts = [];
+
+  if (c.remainingToday === 0 && c.completedToday === 0) {
+    return 'Nothing scheduled or overdue today — a clear slate.';
+  }
+
+  if (c.dueToday > 0) parts.push(`${c.dueToday} due today`);
+  if (c.overdue > 0) parts.push(`${c.overdue} overdue`);
+  if (c.completedToday > 0) parts.push(`${c.completedToday} completed`);
+
+  let sentence = `Today: ${parts.join(', ')}.`;
+
+  if (c.overdue > 0) {
+    sentence += ' Tackle the overdue items first.';
+  } else if (c.dueToday > 0) {
+    const top = overview.dueToday.find((t) => t.priority === 'high') || overview.dueToday[0];
+    sentence += top ? ` Start with "${top.title}".` : '';
+  } else {
+    sentence += ' Great work clearing today\'s list!';
+  }
+
+  return sentence;
+}
+
 module.exports = {
   parseTask,
   parseWithRules,
   parseWithLLM,
   summarize,
+  summarizeToday,
+  buildTodayFallback,
   extractDueDate,
   extractPriority,
   extractTags,

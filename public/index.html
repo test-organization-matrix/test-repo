@@ -49,6 +49,24 @@
       </div>
     </section>
 
+    <section class="card today-card" id="todayCard">
+      <div class="today-head">
+        <h2 class="today-title">📅 Today's Summary <span class="today-date" id="todayDate"></span></h2>
+        <button id="todayRefresh" class="btn btn--ghost btn--sm" title="Refresh">↻</button>
+      </div>
+
+      <p class="today-recap" id="todayRecap"></p>
+
+      <div class="today-counts" id="todayCounts">
+        <div class="stat"><span class="stat__num" id="statDue">0</span><span class="stat__label">Due today</span></div>
+        <div class="stat stat--warn"><span class="stat__num" id="statOverdue">0</span><span class="stat__label">Overdue</span></div>
+        <div class="stat stat--good"><span class="stat__num" id="statDone">0</span><span class="stat__label">Done today</span></div>
+        <div class="stat"><span class="stat__num" id="statOpen">0</span><span class="stat__label">Open total</span></div>
+      </div>
+
+      <div class="today-lists" id="todayLists"></div>
+    </section>
+
     <section class="card summary-card" id="summaryCard" hidden>
       <span class="summary-icon">✨</span>
       <p id="summaryText"></p>

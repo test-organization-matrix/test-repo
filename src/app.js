@@ -3,7 +3,7 @@
 const path = require('node:path');
 const express = require('express');
 const { TodoStore } = require('./db');
-const { parseTask, summarize } = require('./ai');
+const { parseTask, summarize, summarizeToday } = require('./ai');
 
 const PRIORITIES = new Set(['low', 'medium', 'high']);
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -125,6 +125,18 @@ function createApp({ store, ai = {} } = {}) {
   app.post('/api/ai/summary', asyncRoute(async (req, res) => {
     const result = await summarize(todos.list(), { ai });
     res.json(result);
+  }));
+
+  // Today's todo summary: counts + the actual lists for the day.
+  app.get('/api/today', (req, res) => {
+    res.json(todos.todayOverview());
+  });
+
+  // AI recap of today: one short sentence built from the day's overview.
+  app.post('/api/ai/today', asyncRoute(async (req, res) => {
+    const overview = todos.todayOverview();
+    const { summary, engine } = await summarizeToday(overview, { ai });
+    res.json({ summary, engine, counts: overview.counts, date: overview.date });
   }));
 
   app.patch('/api/todos/:id', (req, res) => {

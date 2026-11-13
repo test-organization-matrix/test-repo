@@ -137,6 +137,103 @@ async function load() {
   state.todos = data.todos;
   state.stats = data.stats;
   render();
+  loadToday();
+}
+
+/* ---------- Today's summary ---------- */
+
+function todayGroup(label, items, { overdue = false } = {}) {
+  const wrap = document.createElement('div');
+  const h = document.createElement('div');
+  h.className = 'today-group__label';
+  h.textContent = `${label} (${items.length})`;
+  wrap.appendChild(h);
+
+  const list = document.createElement('div');
+  list.className = 'today-group__items';
+  if (items.length === 0) {
+    const p = document.createElement('div');
+    p.className = 'today-empty';
+    p.textContent = '—';
+    list.appendChild(p);
+  } else {
+    for (const t of items.slice(0, 8)) {
+      const row = document.createElement('div');
+      row.className = 'today-item';
+      const dot = document.createElement('span');
+      dot.className = `today-item__dot today-item__dot--${t.priority}`;
+      const title = document.createElement('span');
+      title.className = 'today-item__title';
+      title.textContent = t.title;
+      row.appendChild(dot);
+      row.appendChild(title);
+      if (overdue && t.dueDate) {
+        const due = document.createElement('span');
+        due.className = 'today-item__due';
+        due.textContent = formatDue(t.dueDate);
+        row.appendChild(due);
+      }
+      list.appendChild(row);
+    }
+    if (items.length > 8) {
+      const more = document.createElement('div');
+      more.className = 'today-empty';
+      more.textContent = `+${items.length - 8} more`;
+      list.appendChild(more);
+    }
+  }
+  wrap.appendChild(list);
+  return wrap;
+}
+
+async function loadToday() {
+  try {
+    const [overview, recap] = await Promise.all([
+      api('/api/today'),
+      api('/api/ai/today', { method: 'POST', body: '{}' }).catch(() => ({ summary: '' })),
+    ]);
+
+    const d = new Date(overview.date + 'T00:00:00');
+    $('#todayDate').textContent = d.toLocaleDateString(undefined, {
+      weekday: 'long', month: 'short', day: 'numeric',
+    });
+
+    const c = overview.counts;
+    $('#statDue').textContent = c.dueToday;
+    $('#statOverdue').textContent = c.overdue;
+    $('#statDone').textContent = c.completedToday;
+    $('#statOpen').textContent = c.openTotal;
+    document.querySelector('.stat--warn').classList.toggle('has-value', c.overdue > 0);
+
+    const recapEl = $('#todayRecap');
+    recapEl.classList.remove('is-loading');
+    recapEl.textContent = recap.summary || buildLocalRecap(c);
+
+    const lists = $('#todayLists');
+    lists.innerHTML = '';
+    if (overview.overdue.length) lists.appendChild(todayGroup('Overdue', overview.overdue, { overdue: true }));
+    if (overview.dueToday.length) lists.appendChild(todayGroup('Due today', overview.dueToday));
+    if (overview.completedToday.length) lists.appendChild(todayGroup('Completed today', overview.completedToday));
+    if (!overview.overdue.length && !overview.dueToday.length && !overview.completedToday.length) {
+      const p = document.createElement('div');
+      p.className = 'today-empty';
+      p.textContent = 'Nothing due or completed today.';
+      lists.appendChild(p);
+    }
+  } catch (err) {
+    const recapEl = $('#todayRecap');
+    recapEl.classList.remove('is-loading');
+    recapEl.textContent = 'Could not load today\'s summary.';
+  }
+}
+
+/** Used only if the /api/ai/today call yields nothing (e.g. offline). */
+function buildLocalRecap(c) {
+  const parts = [];
+  if (c.dueToday) parts.push(`${c.dueToday} due today`);
+  if (c.overdue) parts.push(`${c.overdue} overdue`);
+  if (c.completedToday) parts.push(`${c.completedToday} completed`);
+  return parts.length ? `Today: ${parts.join(', ')}.` : 'Nothing scheduled or overdue today.';
 }
 
 async function toggleTodo(id, done) {
@@ -277,6 +374,13 @@ function init() {
     } catch (err) {
       toast(err.message, true);
     }
+  });
+
+  $('#todayRefresh').addEventListener('click', () => {
+    const recapEl = $('#todayRecap');
+    recapEl.classList.add('is-loading');
+    recapEl.textContent = 'Summarizing…';
+    loadToday();
   });
 
   api('/api/health').then((h) => {

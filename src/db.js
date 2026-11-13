@@ -159,6 +159,47 @@ class TodoStore {
     };
   }
 
+  /**
+   * Snapshot of a given day (defaults to today) for the "Today's summary" card.
+   * `today` is an injectable ISO date (YYYY-MM-DD) so tests stay deterministic.
+   */
+  todayOverview(today = new Date().toISOString().slice(0, 10)) {
+    const dueToday = this.db.prepare(
+      "SELECT * FROM todos WHERE done = 0 AND due_date = ? ORDER BY priority = 'high' DESC, id DESC",
+    ).all(today).map((r) => this.#rowToTodo(r));
+
+    const overdue = this.db.prepare(
+      'SELECT * FROM todos WHERE done = 0 AND due_date IS NOT NULL AND due_date < ? ORDER BY due_date ASC, id DESC',
+    ).all(today).map((r) => this.#rowToTodo(r));
+
+    const completedToday = this.db.prepare(
+      'SELECT * FROM todos WHERE done = 1 AND substr(completed_at, 1, 10) = ? ORDER BY completed_at DESC',
+    ).all(today).map((r) => this.#rowToTodo(r));
+
+    const completedCount = Number(this.db.prepare(
+      "SELECT COUNT(*) AS n FROM todos WHERE done = 1 AND substr(completed_at, 1, 10) = ?",
+    ).get(today).n || 0);
+
+    const openTotal = Number(this.db.prepare(
+      'SELECT COUNT(*) AS n FROM todos WHERE done = 0',
+    ).get().n || 0);
+
+    return {
+      date: today,
+      dueToday,
+      overdue,
+      completedToday,
+      counts: {
+        dueToday: dueToday.length,
+        overdue: overdue.length,
+        completedToday: completedCount,
+        openTotal,
+        /** What's left to do today: today's open items plus anything overdue. */
+        remainingToday: dueToday.length + overdue.length,
+      },
+    };
+  }
+
   close() {
     this.db.close();
   }

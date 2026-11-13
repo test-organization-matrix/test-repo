@@ -20,6 +20,10 @@ of your open list.
   so the app never breaks and needs no account to try.
 - **Review before saving** — the AI returns a *draft* you can edit, then save.
 - **AI focus summary** — a one-line suggestion of what to tackle next.
+- **Today's summary** — a live card with a plain-language recap of the day,
+  counts for due-today / overdue / completed / open, and the actual task lists
+  grouped by overdue, due today and completed today (each ✨ recap uses the LLM
+  when configured, otherwise the offline engine).
 - **Filters, sort and stats** — open/done/high-priority views, sort by priority
   or due date, live completion stats.
 - **Zero-dependency storage** — Node's built-in SQLite (`node:sqlite`), so no
@@ -86,6 +90,8 @@ draft-not-saved guarantee).
 | `POST`   | `/api/ai/parse`            | Parse text → draft todo (**does not save**)  |
 | `POST`   | `/api/ai/add`              | Parse text → draft → save in one call        |
 | `POST`   | `/api/ai/summary`          | AI summary of the open list                  |
+| `GET`    | `/api/today`               | Today's overview: due/overdue/completed lists + counts |
+| `POST`   | `/api/ai/today`            | AI recap of the day (LLM or offline engine)  |
 
 ### Example
 

@@ -134,3 +134,32 @@ test('unknown API routes return JSON 404', async () => {
   assert.equal(res.status, 404);
   assert.match(res.headers.get('content-type'), /application\/json/);
 });
+
+test('GET /api/today returns counts and lists', async () => {
+  await fetch(`${base}/api/todos`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title: 'Today task', dueDate: new Date().toISOString().slice(0, 10) }),
+  });
+  const res = await fetch(`${base}/api/today`);
+  assert.equal(res.status, 200);
+  const body = await json(res);
+  assert.ok(Array.isArray(body.dueToday));
+  assert.ok(Array.isArray(body.overdue));
+  assert.ok(Array.isArray(body.completedToday));
+  assert.equal(typeof body.counts.dueToday, 'number');
+  assert.equal(typeof body.counts.remainingToday, 'number');
+});
+
+test('POST /api/ai/today returns a summary on the offline engine', async () => {
+  const res = await fetch(`${base}/api/ai/today`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: '{}',
+  });
+  assert.equal(res.status, 200);
+  const body = await json(res);
+  assert.equal(body.engine, 'rules');
+  assert.equal(typeof body.summary, 'string');
+  assert.ok(body.summary.length > 0);
+});
